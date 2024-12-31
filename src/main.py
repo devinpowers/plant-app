@@ -72,5 +72,7 @@ def get_plants_api():
 
 if __name__ == '__main__':
     # Run on localhost:5000
+    app.run(host='0.0.0.0', port=5001, debug=True)
+
     app.run(debug=True)
 
