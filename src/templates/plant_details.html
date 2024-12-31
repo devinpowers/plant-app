@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plant Details</title>
+</head>
+<body>
+<h1>{{ plant.name }}</h1>
+<p>Watering schedule: {{ plant.schedule }}</p>
+
+{% if plant.photo_filename %}
+<img src="{{ url_for('static', filename='uploads/' ~ plant.photo_filename) }}"
+     alt="Photo of {{ plant.name }}" style="max-width:300px;">
+{% else %}
+<p>No photo uploaded for this plant.</p>
+{% endif %}
+
+<p><a href="{{ url_for('index') }}">Back to Home</a></p>
+</body>
+</html>

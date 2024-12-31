@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add a New Plant</title>
+    <style>
+    body {
+      background-image: url('{{ url_for('static', filename='images/background.jpg') }}');
+      background-size: cover;
+      background-position: center center;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    .content {
+      background-color: rgba(255, 255, 255, 0.8);
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4CAF50;
+      color: #fff;
+      cursor: pointer;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 16px;
+      text-decoration: none;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+<div class="content">
+    <h1>Add a New Plant</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="plant_name">Plant Name:</label>
+        <input type="text" name="plant_name" id="plant_name" required>
+
+        <label for="reminder_days">Reminder Days (how often to water):</label>
+        <input type="number" name="reminder_days" id="reminder_days" required min="1">
+
+        <label for="photo">Upload Photo (optional):</label>
+        <input type="file" name="photo" id="photo">
+
+        <button type="submit">Add Plant</button>
+    </form>
+
+    <p><a class="back-link" href="{{ url_for('index') }}">Back to Home</a></p>
+</div>
+</body>
+</html>
