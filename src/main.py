@@ -22,18 +22,18 @@ import os
 from azure.cosmos import CosmosClient
 
 def get_cosmos_container():
-    """
-    Lazily load the Cosmos DB container.
-    """
-    connection_string = os.getenv("COSMOS_DB_CONNECTION_STRING")
-    if not connection_string:
-        raise ValueError("COSMOS_DB_CONNECTION_STRING is not set.")
+    try:
+        connection_string = os.getenv("COSMOS_DB_CONNECTION_STRING")
+        if not connection_string:
+            raise ValueError("COSMOS_DB_CONNECTION_STRING is not set.")
 
-    # Mocked during tests
-    cosmos_client = CosmosClient.from_connection_string(connection_string)
-    database = cosmos_client.get_database_client("PlantDatabase")
-    return database.get_container_client("PlantsContainer")
-
+        cosmos_client = CosmosClient.from_connection_string(connection_string)
+        database = cosmos_client.get_database_client("plant_database")
+        container = database.get_container_client("plant_container")
+        return container
+    except Exception as e:
+        print(f"Error connecting to Cosmos DB: {e}")
+        raise
 
 
 @app.route('/')
