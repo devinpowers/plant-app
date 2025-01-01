@@ -53,13 +53,16 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: Deploy to Azure Web App
+      # Step to log in to Azure
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'plant-web-app'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-
-      - name: Configure Azure Web App
-        run: az webapp config set --name plant-web-app --resource-group devin-rg --startup-file "python3 src/main.py"
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9ADF3FF9000D4D6E9F57DA15BC409A90 }}
