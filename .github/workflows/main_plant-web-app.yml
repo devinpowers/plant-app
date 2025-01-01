@@ -11,16 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - uses: actions/checkout@v4
 
-      # Step 2: Set up Python environment
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
-      # Step 3: Create and activate virtual environment, install dependencies
       - name: Create and start virtual environment
         run: |
           python -m venv venv
@@ -29,11 +26,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Step 4: Zip the required files for deployment
       - name: Zip artifact for deployment
-        run: zip release.zip src main.py requirements.txt -r
+        run: zip release.zip ./* -r
 
-      # Step 5: Upload the zip artifact for the deployment job
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
@@ -50,29 +45,21 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      # Step 6: Download artifact from the build job
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
 
-      # Step 7: Unzip the artifact for deployment
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      # Step 8: Deploy the app to Azure Web App
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'plant-web-app'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9ADF3FF9000D4D6E9F57DA15BC409A90 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
 
-      # Step 9: Set the startup command for Azure Web App
-      - name: Set startup command
-        run: az webapp config set --name plant-web-app --resource-group <ResourceGroupName> --startup-file "python3 src/main.py"
-
-      # Step 10: Configure PythonPath environment variable
-      - name: Configure PythonPath
-        run: az webapp config appsettings set --name plant-web-app --resource-group <ResourceGroupName> --settings PYTHONPATH=/home/site/wwwroot/src
+      - name: Configure Azure Web App
+        run: az webapp config set --name plant-web-app --resource-group devin-rg --startup-file "python3 src/main.py"
