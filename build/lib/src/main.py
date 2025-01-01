@@ -5,8 +5,8 @@ from datetime import datetime
 from azure.cosmos import CosmosClient
 
 # Initialize Flask app
-app = Flask(__name__, template_folder='templates', static_folder='static')
-app.secret_key = os.getenv('SECRET_KEY', 'default-key-for-dev')
+app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 # Path for file uploads (photos)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
@@ -15,7 +15,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Azure Cosmos DB Configuration
 DATABASE_NAME = 'plant_database'
-CONTAINER_NAME = 'plant_container'
+CONTAINER_NAME = 'export COSMOS_DB_CONNECTION_STRING='
 
 # Initialize Cosmos DB client and container lazily
 import os

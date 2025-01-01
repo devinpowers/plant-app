@@ -1,0 +1,13 @@
+README.md
+setup.py
+plant_water_reminder.egg-info/PKG-INFO
+plant_water_reminder.egg-info/SOURCES.txt
+plant_water_reminder.egg-info/dependency_links.txt
+plant_water_reminder.egg-info/requires.txt
+plant_water_reminder.egg-info/top_level.txt
+src/__init__.py
+src/main.py
+tests/__init__.py
+tests/conftest.py
+tests/test_adding_photo.py
+tests/unit_tests.py

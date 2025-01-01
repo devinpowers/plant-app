@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: plant_water_reminder
+Version: 0.1.0
+Summary: A simple plant watering reminder app
+Author: Your Name
+Author-email: you@example.com
+Requires-Dist: Flask>=2.0.0
