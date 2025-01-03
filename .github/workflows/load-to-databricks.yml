@@ -3,25 +3,26 @@ name: Load Repo to Databricks
 on:
   push:
     branches:
-      - main
+      - main  # Trigger workflow on pushes to the 'main' branch
 
 jobs:
   upload-repo:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Load Repo to Databricks
         env:
-          DATABRICKS_HOST: "https:///adb-984797968863959.19.azuredatabricks.net"
+          DATABRICKS_HOST: "https://adb-984797968863959.19.azuredatabricks.net/"
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: |
           curl -X POST "$DATABRICKS_HOST/api/2.0/repos" \
           -H "Authorization: Bearer $DATABRICKS_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
-            "url": "https://github.com/<your-github-username>/Plant-Databricks-App.git",
+            "url": "https://github.com/devinpowers/plant-app.git",
             "provider": "github",
-            "path": "/Repos/Plant-Databricks-App"
+            "path": "/Repos/devinjpowers@gmail.com/plant-app"
           }'
