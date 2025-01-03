@@ -21,7 +21,7 @@ jobs:
           -H "Authorization: Bearer $DATABRICKS_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
-            "url": "https://github.com/devinpowers/plant-app.git",
+            "url": "https://github.com/<your-github-username>/Plant-Databricks-App.git",
             "provider": "github",
-            "path": "Workspace/Repos/Plant-Databricks-App"
+            "path": "/Repos/Plant-Databricks-App"
           }'
