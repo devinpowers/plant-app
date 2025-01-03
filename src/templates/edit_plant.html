@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Plant Details</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        main {
+            margin: 20px auto;
+            max-width: 600px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            text-align: center;
+        }
+
+        form label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #333;
+        }
+
+        form input, form textarea, form button {
+            width: 100%;
+            margin-top: 5px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        form textarea {
+            resize: none;
+        }
+
+        form button {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e8f5e9;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Edit Plant Details</h1>
+</header>
+<main>
+    <form method="POST">
+        <div class="form-group">
+            <label for="plant_name">Plant Name:</label>
+            <input type="text" name="plant_name" id="plant_name" value="{{ plant.name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="scientific_name">Scientific Name:</label>
+            <input type="text" name="scientific_name" id="scientific_name" value="{{ plant.scientific_name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="personal_name">Personal Name:</label>
+            <input type="text" name="personal_name" id="personal_name" value="{{ plant.personal_name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="reminder_days">Watering Reminder (Days):</label>
+            <input type="number" name="reminder_days" id="reminder_days" value="{{ plant.reminder_days }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="health_log">Health Log:</label>
+            <textarea name="health_log" id="health_log" rows="5">{{ plant.health_log | join(', ') }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <button type="submit">Save Changes</button>
+        </div>
+    </form>
+    <a href="{{ url_for('view_plant', plant_id=plant['id']) }}" class="btn-secondary">Cancel</a>
+</main>
+</body>
+</html>

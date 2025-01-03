@@ -6,7 +6,6 @@ def mock_environment_and_cosmos_client():
     """
     Mock environment variables and CosmosClient for all tests.
     """
-    print("jewwwwwww")
     with patch("os.getenv") as mock_getenv, patch("azure.cosmos.CosmosClient") as mock_client:
         # Mock the environment variable
         mock_getenv.side_effect = lambda key: {

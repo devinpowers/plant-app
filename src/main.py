@@ -17,9 +17,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 DATABASE_NAME = 'plant_database'
 CONTAINER_NAME = 'plant_container'
 
-# Initialize Cosmos DB client and container lazily
-import os
-from azure.cosmos import CosmosClient
 
 def get_cosmos_container():
     try:
@@ -28,8 +25,8 @@ def get_cosmos_container():
             raise ValueError("COSMOS_DB_CONNECTION_STRING is not set.")
 
         cosmos_client = CosmosClient.from_connection_string(connection_string)
-        database = cosmos_client.get_database_client("plant_database")
-        container = database.get_container_client("plant_container")
+        database = cosmos_client.get_database_client(DATABASE_NAME)
+        container = database.get_container_client(CONTAINER_NAME)
         return container
     except Exception as e:
         print(f"Error connecting to Cosmos DB: {e}")
@@ -41,11 +38,17 @@ def index():
     """
     Home page: Lists all plants stored in Cosmos DB.
     """
-    container = get_cosmos_container()
-    plants_query = "SELECT * FROM c"
-    plants = list(container.query_items(query=plants_query, enable_cross_partition_query=True))
-    return render_template('index.html', plants=plants)
+    try:
+        container = get_cosmos_container()
+        plants_query = "SELECT * FROM c"
+        plants = list(container.query_items(query=plants_query, enable_cross_partition_query=True))
 
+        print("Plants Retrieved:", plants)  # Debugging output
+        return render_template('index.html', plants=plants)
+    except Exception as e:
+        print(f"Error fetching plants: {e}")
+        flash("Failed to load plants. Please try again later.", "error")
+        return render_template('index.html', plants=[])
 
 @app.route('/add_plant', methods=['GET', 'POST'])
 def add_plant():
@@ -54,6 +57,8 @@ def add_plant():
     """
     if request.method == 'POST':
         plant_name = request.form.get('plant_name')
+        scientific_name = request.form.get('scientific_name', '')
+        personal_name = request.form.get('personal_name', '')
         reminder_days_str = request.form.get('reminder_days')
 
         # Validate reminder_days
@@ -75,8 +80,11 @@ def add_plant():
         new_plant = {
             'id': str(uuid.uuid4()),  # Generate unique ID for Cosmos DB
             'name': plant_name,
+            'scientific_name': scientific_name,
+            'personal_name': personal_name,
             'reminder_days': reminder_days,
             'photo_filename': photo_filename,
+            'health_log': []  # Initialize with an empty list
         }
 
         # Insert into Cosmos DB
@@ -89,15 +97,59 @@ def add_plant():
         return render_template('add_plant.html')
 
 
-@app.route('/api/plants', methods=['GET'])
-def get_plants_api():
+@app.route('/plant/<plant_id>')
+def view_plant(plant_id):
     """
-    Example JSON endpoint for retrieving all plants.
+    View plant details.
     """
     container = get_cosmos_container()
-    plants_query = "SELECT * FROM c"
-    plants = list(container.query_items(query=plants_query, enable_cross_partition_query=True))
-    return jsonify(plants)
+    plant = container.read_item(item=plant_id, partition_key=plant_id)
+    return render_template('plant_details.html', plant=plant)
+
+
+
+@app.route('/edit_plant/<plant_id>', methods=['GET', 'POST'])
+def edit_plant(plant_id):
+    container = get_cosmos_container()
+    if request.method == 'POST':
+        # Retrieve the plant from the database
+        plant = container.read_item(item=plant_id, partition_key=plant_id)
+
+        # Update fields
+        plant['name'] = request.form.get('plant_name', plant['name'])
+        plant['scientific_name'] = request.form.get('scientific_name', plant.get('scientific_name', ''))
+        plant['personal_name'] = request.form.get('personal_name', plant.get('personal_name', ''))
+        plant['reminder_days'] = int(request.form.get('reminder_days', plant['reminder_days']))
+
+        # Update health log
+        new_health_log = request.form.get('health_log', '').strip()
+        if new_health_log:
+            plant['health_log'] = [{'timestamp': str(datetime.now()), 'note': note.strip()}
+                                   for note in new_health_log.split(',')]
+
+        # Save the updated plant back to Cosmos DB
+        container.upsert_item(plant)
+
+        flash("Plant updated successfully!", "success")
+        return redirect(url_for('view_plant', plant_id=plant_id))
+    else:
+        # Retrieve the plant and pass it to the template
+        try:
+            plant = container.read_item(item=plant_id, partition_key=plant_id)
+            return render_template('edit_plant.html', plant=plant)
+        except Exception as e:
+            flash("Plant not found!", "error")
+            return redirect(url_for('index'))
+
+@app.route('/delete_plant/<plant_id>', methods=['POST'])
+def delete_plant(plant_id):
+    """
+    Delete a plant.
+    """
+    container = get_cosmos_container()
+    container.delete_item(item=plant_id, partition_key=plant_id)
+    flash("Plant deleted successfully.", "success")
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
