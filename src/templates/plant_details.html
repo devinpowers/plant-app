@@ -1,19 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>Plant Details</title>
 </head>
 <body>
-<h1>{{ plant.name }}</h1>
-<p>Watering schedule: {{ plant.schedule }}</p>
-
-{% if plant.photo_filename %}
-<img src="{{ url_for('static', filename='uploads/' ~ plant.photo_filename) }}"
-     alt="Photo of {{ plant.name }}" style="max-width:300px;">
-{% else %}
-<p>No photo uploaded for this plant.</p>
-{% endif %}
-
-<p><a href="{{ url_for('index') }}">Back to Home</a></p>
+<div class="container">
+    <h1>{{ plant['name'] }}</h1>
+    <p><strong>Scientific Name:</strong> {{ plant['scientific_name'] }}</p>
+    <p><strong>Personal Name:</strong> {{ plant['personal_name'] }}</p>
+    <p><strong>Reminder Days:</strong> {{ plant['reminder_days'] }} days</p>
+    <p><strong>Health Log:</strong></p>
+    <ul>
+        {% for log in plant['health_log'] %}
+        <li>{{ log['timestamp'] }} - {{ log['note'] }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('edit_plant', plant_id=plant['id']) }}" class="btn-edit">Edit</a>
+    <form action="{{ url_for('delete_plant', plant_id=plant['id']) }}" method="POST" style="display: inline;">
+        <button type="submit" class="btn-delete">Delete</button>
+    </form>
+    <a href="{{ url_for('index') }}" class="btn-back">Back to Main</a>
+</div>
 </body>
 </html>
