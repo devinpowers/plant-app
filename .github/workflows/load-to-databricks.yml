@@ -23,5 +23,5 @@ jobs:
           -d '{
             "url": "https://github.com/devinpowers/plant-app.git",
             "provider": "github",
-            "path": "/Repos/Plant-Databricks-App"
+            "path": "Workspace/Repos/Plant-Databricks-App"
           }'
