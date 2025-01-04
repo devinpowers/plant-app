@@ -3,6 +3,7 @@ import uuid
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from datetime import datetime
 from azure.cosmos import CosmosClient
+from werkzeug.utils import secure_filename
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -108,38 +109,7 @@ def view_plant(plant_id):
 
 
 
-@app.route('/edit_plant/<plant_id>', methods=['GET', 'POST'])
-def edit_plant(plant_id):
-    container = get_cosmos_container()
-    if request.method == 'POST':
-        # Retrieve the plant from the database
-        plant = container.read_item(item=plant_id, partition_key=plant_id)
 
-        # Update fields
-        plant['name'] = request.form.get('plant_name', plant['name'])
-        plant['scientific_name'] = request.form.get('scientific_name', plant.get('scientific_name', ''))
-        plant['personal_name'] = request.form.get('personal_name', plant.get('personal_name', ''))
-        plant['reminder_days'] = int(request.form.get('reminder_days', plant['reminder_days']))
-
-        # Update health log
-        new_health_log = request.form.get('health_log', '').strip()
-        if new_health_log:
-            plant['health_log'] = [{'timestamp': str(datetime.now()), 'note': note.strip()}
-                                   for note in new_health_log.split(',')]
-
-        # Save the updated plant back to Cosmos DB
-        container.upsert_item(plant)
-
-        flash("Plant updated successfully!", "success")
-        return redirect(url_for('view_plant', plant_id=plant_id))
-    else:
-        # Retrieve the plant and pass it to the template
-        try:
-            plant = container.read_item(item=plant_id, partition_key=plant_id)
-            return render_template('edit_plant.html', plant=plant)
-        except Exception as e:
-            flash("Plant not found!", "error")
-            return redirect(url_for('index'))
 
 @app.route('/delete_plant/<plant_id>', methods=['POST'])
 def delete_plant(plant_id):
@@ -151,6 +121,60 @@ def delete_plant(plant_id):
     flash("Plant deleted successfully.", "success")
     return redirect(url_for('index'))
 
+@app.route('/edit_plant/<string:plant_id>', methods=['GET', 'POST'])
+def edit_plant(plant_id):
+    """
+    Edit plant details or add a health log to the plant.
+    """
+    try:
+        # Fetch the plant document from Cosmos DB
+        container = get_cosmos_container()
+        plant = container.read_item(item=plant_id, partition_key=plant_id)
+        print(f"Retrieved plant: {plant}")  # Debugging output
+    except Exception as e:
+        print(f"Error fetching plant: {e}")
+        return "Plant not found", 404
+
+    if request.method == 'POST':
+        try:
+            # Update plant fields
+            plant['name'] = request.form.get('plant_name', plant['name'])
+            plant['scientific_name'] = request.form.get('scientific_name', plant.get('scientific_name'))
+            plant['personal_name'] = request.form.get('personal_name', plant.get('personal_name'))
+            plant['reminder_days'] = int(request.form.get('reminder_days', plant['reminder_days']))
+
+            # Add a health log entry if a message is provided
+            if 'message' in request.form:
+                message = request.form['message']
+                photo = request.files.get('photo')
+
+                # Handle photo upload
+                photo_filename = None
+                if photo:
+                    photo_filename = secure_filename(photo.filename)
+                    photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
+
+                # Append new health log entry
+                health_log_entry = {
+                    "time": datetime.utcnow().isoformat(),
+                    "message": message,
+                    "photo": photo_filename
+                }
+                if 'health_log' not in plant:
+                    plant['health_log'] = []
+                plant['health_log'].append(health_log_entry)
+
+            # Update the document in Cosmos DB
+            container.upsert_item(plant)
+            flash("Plant details updated successfully!", "success")
+            return redirect(url_for('index'))
+        except Exception as e:
+            print(f"Error updating plant: {e}")
+            flash("Failed to update plant. Please try again later.", "error")
+            return redirect(url_for('index'))
+
+    # Render the edit form
+    return render_template('edit_plant.html', plant=plant)
 
 if __name__ == '__main__':
     # Run on localhost for local testing

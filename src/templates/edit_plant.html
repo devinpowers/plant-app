@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Plant Details</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,36 +16,37 @@
         header {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 20px;
+            padding: 15px;
             text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
         }
 
-        main {
-            margin: 20px auto;
-            max-width: 600px;
+        .container {
+            max-width: 700px;
+            margin: 30px auto;
             background: white;
             border-radius: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px 30px;
         }
 
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
+        h2 {
             color: #4CAF50;
-            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
         }
 
         form label {
             font-weight: bold;
-            margin-top: 10px;
             display: block;
+            margin-bottom: 5px;
             color: #333;
         }
 
         form input, form textarea, form button {
             width: 100%;
-            margin-top: 5px;
+            margin-bottom: 15px;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -71,7 +72,6 @@
         .btn-secondary {
             display: inline-block;
             text-align: center;
-            margin-top: 10px;
             padding: 10px 20px;
             font-size: 1rem;
             color: #4CAF50;
@@ -85,47 +85,75 @@
             background-color: #e8f5e9;
         }
 
-        .form-group {
+        .health-log {
+            margin-top: 30px;
+        }
+
+        .health-log-entry {
+            background: #f9f9f9;
+            padding: 15px;
             margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .health-log-entry img {
+            max-width: 100px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        .health-log-entry p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
 <header>
-    <h1>Edit Plant Details</h1>
+    Edit Plant Details
 </header>
-<main>
-    <form method="POST">
-        <div class="form-group">
-            <label for="plant_name">Plant Name:</label>
-            <input type="text" name="plant_name" id="plant_name" value="{{ plant.name }}" required>
+<div class="container">
+    <form method="POST" enctype="multipart/form-data">
+        <h2>Plant Information</h2>
+        <label for="plant_name">Plant Name:</label>
+        <input type="text" name="plant_name" id="plant_name" value="{{ plant['name'] }}" required>
+
+        <label for="scientific_name">Scientific Name:</label>
+        <input type="text" name="scientific_name" id="scientific_name" value="{{ plant['scientific_name'] }}">
+
+        <label for="personal_name">Personal Name:</label>
+        <input type="text" name="personal_name" id="personal_name" value="{{ plant['personal_name'] }}">
+
+        <label for="reminder_days">Watering Reminder (Days):</label>
+        <input type="number" name="reminder_days" id="reminder_days" value="{{ plant['reminder_days'] }}" required>
+
+        <h2>Health Log</h2>
+        <div class="health-log">
+            {% for log in plant['health_log'] %}
+            <div class="health-log-entry">
+                <p><strong>Time:</strong> {{ log['time'] }}</p>
+                <p><strong>Note:</strong> {{ log['message'] }}</p>
+                {% if log['photo'] %}
+                <a href="{{ url_for('static', filename='uploads/' ~ log['photo']) }}" target="_blank">
+                    <img src="{{ url_for('static', filename='uploads/' ~ log['photo']) }}" alt="Health Log Photo">
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
 
-        <div class="form-group">
-            <label for="scientific_name">Scientific Name:</label>
-            <input type="text" name="scientific_name" id="scientific_name" value="{{ plant.scientific_name }}">
-        </div>
+        <label for="message">Add Note:</label>
+        <textarea name="message" id="message" rows="4" placeholder="Enter a note about this plant..."></textarea>
 
-        <div class="form-group">
-            <label for="personal_name">Personal Name:</label>
-            <input type="text" name="personal_name" id="personal_name" value="{{ plant.personal_name }}">
-        </div>
+        <label for="photo">Upload Photo (Optional):</label>
+        <input type="file" name="photo" id="photo">
 
-        <div class="form-group">
-            <label for="reminder_days">Watering Reminder (Days):</label>
-            <input type="number" name="reminder_days" id="reminder_days" value="{{ plant.reminder_days }}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="health_log">Health Log:</label>
-            <textarea name="health_log" id="health_log" rows="5">{{ plant.health_log | join(', ') }}</textarea>
-        </div>
-
-        <div class="form-group">
-            <button type="submit">Save Changes</button>
-        </div>
+        <button type="submit">Save Changes</button>
+        <a href="{{ url_for('index') }}" class="btn-secondary">Cancel</a>
     </form>
-    <a href="{{ url_for('view_plant', plant_id=plant['id']) }}" class="btn-secondary">Cancel</a>
-</main>
+</div>
 </body>
 </html>
+
+

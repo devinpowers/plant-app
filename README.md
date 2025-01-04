@@ -55,3 +55,42 @@ Feel free to fork this repository and submit pull requests for any features or b
 
 ## License
 This project is licensed under the MIT License.
+
+
+
+## Cosmos DB
+
+```
+Cosmos DB
+└── plant_database
+    └── plant_container
+        ├── Plant Document 1
+        │   ├── id: "12345"
+        │   ├── name: "Spider Plant"
+        │   ├── scientific_name: "Chlorophytum comosum"
+        │   ├── personal_name: "Greenie"
+        │   ├── reminder_days: 7
+        │   ├── photo_filename: "spider_plant.jpg"
+        │   └── health_log:
+        │       ├── Entry 1
+        │       │   ├── time: "2025-01-01T10:00:00Z"
+        │       │   ├── message: "Watered the plant"
+        │       │   └── photo: "watering.jpg"
+        │       └── Entry 2
+        │           ├── time: "2025-01-05T14:30:00Z"
+        │           ├── message: "Pruned the leaves"
+        │           └── photo: "pruning.jpg"
+        └── Plant Document 2
+            ├── id: "67890"
+            ├── name: "Bonsai"
+            ├── scientific_name: "Juniperus procumbens"
+            ├── personal_name: "Tiny Tree"
+            ├── reminder_days: 10
+            ├── photo_filename: "bonsai.jpg"
+            └── health_log:
+                └── Entry 1
+                    ├── time: "2025-01-02T12:00:00Z"
+                    ├── message: "Checked for pests"
+                    └── photo: "pest_check.jpg"
+
+```
