@@ -46,20 +46,14 @@
             border-radius: 10px;
         }
 
-        ul {
-            list-style-type: disc;
-            margin: 20px;
-            padding: 0;
-            color: #333;
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
         }
 
-        li {
-            margin-bottom: 10px;
-        }
-
-        .btn-edit, .btn-delete, .btn-back {
+        .btn {
             display: inline-block;
-            margin-top: 15px;
+            margin: 10px 5px;
             padding: 10px 20px;
             font-size: 1rem;
             border-radius: 5px;
@@ -92,7 +86,6 @@
         .btn-back {
             background-color: #4CAF50;
             color: white;
-            border: none;
             text-align: center;
         }
 
@@ -107,7 +100,7 @@
 
     <div class="plant-image">
         {% if plant['photo_filename'] %}
-        <img src="{{ url_for('static', filename='uploads/' ~ plant['photo_filename']) }}" alt="{{ plant['name'] }}">
+        <img src="{{ plant['photo_filename'] }}" alt="{{ plant.name }}">
         {% else %}
         <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="No Image Available">
         {% endif %}
@@ -117,14 +110,32 @@
     <p><strong>Personal Name:</strong> {{ plant['personal_name'] }}</p>
     <p><strong>Reminder Days:</strong> {{ plant['reminder_days'] }} days</p>
 
-    <div style="text-align: center;">
-        <a href="{{ url_for('edit_plant', plant_id=plant['id']) }}" class="btn-edit">Edit</a>
+    <p style="color: black; font-weight: bold; font-size: 1.2rem;">Health Log</p>
+
+    <ul>
+        {% for entry in plant['health_log'] %}
+        <li>
+            <p><strong>Time:</strong> {{ entry['time'] }}</p>
+            {% if entry['message'] %}
+            <p><strong>Note:</strong> {{ entry['message'] }}</p>
+            {% endif %}
+            {% if entry['photo'] %}
+            <img src="{{ entry['photo'] }}" alt="Health Log Photo" style="max-width: 200px; margin-top: 10px;">
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div class="button-container">
+        <a href="{{ url_for('edit_plant', plant_id=plant['id']) }}" class="btn btn-edit">Edit</a>
         <form action="{{ url_for('delete_plant', plant_id=plant['id']) }}" method="POST" style="display: inline;">
-            <button type="submit" class="btn-delete">Delete</button>
+            <button type="submit" class="btn btn-delete">Delete</button>
         </form>
-        <a href="{{ url_for('index') }}" class="btn-back">Back to Main</a>
+        <a href="{{ url_for('index') }}" class="btn btn-back">Back to Main</a>
     </div>
 </div>
+
 </body>
 </html>
+
 

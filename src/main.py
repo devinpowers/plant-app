@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from datetime import datetime
 from azure.cosmos import CosmosClient
 from werkzeug.utils import secure_filename
+from azure.storage.blob import BlobServiceClient
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -19,6 +20,13 @@ DATABASE_NAME = 'plant_database'
 CONTAINER_NAME = 'plant_container'
 
 
+# Initialize Blob Storage client
+BLOB_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+# BLOB_CONNECTION_STRING = os.getenv("BLOB_CONNECTION_STRING")
+
+blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
+
+container_name = "uploads"
 def get_cosmos_container():
     try:
         connection_string = os.getenv("COSMOS_DB_CONNECTION_STRING")
@@ -51,51 +59,62 @@ def index():
         flash("Failed to load plants. Please try again later.", "error")
         return render_template('index.html', plants=[])
 
+
 @app.route('/add_plant', methods=['GET', 'POST'])
 def add_plant():
-    """
-    Add a new plant. Save the plant to Cosmos DB.
-    """
     if request.method == 'POST':
         plant_name = request.form.get('plant_name')
         scientific_name = request.form.get('scientific_name', '')
         personal_name = request.form.get('personal_name', '')
         reminder_days_str = request.form.get('reminder_days')
 
-        # Validate reminder_days
         try:
             reminder_days = int(reminder_days_str)
         except ValueError:
             flash("Please enter a valid number for reminder days.", "error")
             return redirect(url_for('add_plant'))
 
-        # Handle optional photo upload
+        # Generate a unique ID for the plant
+        plant_id = str(uuid.uuid4())
         photo = request.files.get('photo')
-        if photo and photo.filename != '':
-            photo_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{photo.filename}"
-            photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
-        else:
-            photo_filename = None
+        photo_url = None
 
-        # Create plant entry
+        if photo and photo.filename:
+            try:
+                # Generate the plant folder path in Blob Storage
+                plant_folder = f"{plant_id}/main.jpg"
+
+                # Upload the main photo as "main.jpg" in the plant's folder
+                blob_client = blob_service_client.get_blob_client(container=container_name, blob=plant_folder)
+                blob_client.upload_blob(photo, overwrite=True)
+
+                # Construct the URL for the main photo
+                photo_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{plant_folder}"
+            except Exception as e:
+                flash(f"Failed to upload photo: {e}", "error")
+                return redirect(url_for('add_plant'))
+
+        # Create plant entry for Cosmos DB
         new_plant = {
-            'id': str(uuid.uuid4()),  # Generate unique ID for Cosmos DB
+            'id': plant_id,
             'name': plant_name,
             'scientific_name': scientific_name,
             'personal_name': personal_name,
             'reminder_days': reminder_days,
-            'photo_filename': photo_filename,
-            'health_log': []  # Initialize with an empty list
+            'photo_filename': photo_url,  # Main photo URL
+            'health_log': []  # Initialize an empty health log
         }
 
-        # Insert into Cosmos DB
-        container = get_cosmos_container()
-        container.upsert_item(new_plant)
+        try:
+            container = get_cosmos_container()
+            container.upsert_item(new_plant)
+            flash("Plant added successfully!", "success")
+        except Exception as e:
+            flash(f"Failed to save plant: {e}", "error")
+            return redirect(url_for('add_plant'))
 
-        flash("Plant added successfully!", "success")
         return redirect(url_for('index'))
-    else:
-        return render_template('add_plant.html')
+    return render_template('add_plant.html')
 
 
 @app.route('/plant/<plant_id>')
@@ -121,60 +140,70 @@ def delete_plant(plant_id):
     flash("Plant deleted successfully.", "success")
     return redirect(url_for('index'))
 
-@app.route('/edit_plant/<string:plant_id>', methods=['GET', 'POST'])
+    return render_template('edit_plant.html', plant=plant)
+
+
+@app.route('/edit_plant/<plant_id>', methods=['GET', 'POST'])
 def edit_plant(plant_id):
-    """
-    Edit plant details or add a health log to the plant.
-    """
+    container = get_cosmos_container()
+
+    # Fetch the plant data
     try:
-        # Fetch the plant document from Cosmos DB
-        container = get_cosmos_container()
-        plant = container.read_item(item=plant_id, partition_key=plant_id)
-        print(f"Retrieved plant: {plant}")  # Debugging output
+        plant = container.read_item(plant_id, partition_key=plant_id)
     except Exception as e:
-        print(f"Error fetching plant: {e}")
-        return "Plant not found", 404
+        flash(f"Error retrieving plant: {e}", "error")
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
+        # Update plant fields
+        plant['name'] = request.form.get('plant_name', plant['name'])
+        plant['scientific_name'] = request.form.get('scientific_name', plant['scientific_name'])
+        plant['personal_name'] = request.form.get('personal_name', plant['personal_name'])
+        plant['reminder_days'] = int(request.form.get('reminder_days', plant['reminder_days']))
+
+        # Handle new message and photo
+        new_message = request.form.get('message', '').strip()
+        photo = request.files.get('photo')
+        health_entry = {
+            'time': datetime.utcnow().isoformat(),
+            'message': new_message if new_message else None,
+            'photo': None
+        }
+
+        if photo and photo.filename:
+            try:
+                # Generate a secure filename for the new photo
+                filename = secure_filename(f"{plant_id}/Log/{datetime.now().strftime('%Y%m%d_%H%M%S')}_log.jpg")
+
+                # Upload the photo to Azure Blob Storage
+                blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
+                blob_client.upload_blob(photo, overwrite=True)
+
+                # Save the photo URL in the health entry
+                health_entry['photo'] = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{filename}"
+            except Exception as e:
+                flash(f"Error uploading photo: {e}", "error")
+
+        # Add the health entry if there's a message or photo
+        if health_entry['message'] or health_entry['photo']:
+            if 'health_log' not in plant:
+                plant['health_log'] = []
+            plant['health_log'].append(health_entry)
+
+        # Update the plant in Cosmos DB
         try:
-            # Update plant fields
-            plant['name'] = request.form.get('plant_name', plant['name'])
-            plant['scientific_name'] = request.form.get('scientific_name', plant.get('scientific_name'))
-            plant['personal_name'] = request.form.get('personal_name', plant.get('personal_name'))
-            plant['reminder_days'] = int(request.form.get('reminder_days', plant['reminder_days']))
-
-            # Add a health log entry if a message is provided
-            if 'message' in request.form:
-                message = request.form['message']
-                photo = request.files.get('photo')
-
-                # Handle photo upload
-                photo_filename = None
-                if photo:
-                    photo_filename = secure_filename(photo.filename)
-                    photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
-
-                # Append new health log entry
-                health_log_entry = {
-                    "time": datetime.utcnow().isoformat(),
-                    "message": message,
-                    "photo": photo_filename
-                }
-                if 'health_log' not in plant:
-                    plant['health_log'] = []
-                plant['health_log'].append(health_log_entry)
-
-            # Update the document in Cosmos DB
             container.upsert_item(plant)
-            flash("Plant details updated successfully!", "success")
-            return redirect(url_for('index'))
+            flash("Plant updated successfully!", "success")
         except Exception as e:
-            print(f"Error updating plant: {e}")
-            flash("Failed to update plant. Please try again later.", "error")
-            return redirect(url_for('index'))
+            flash(f"Error updating plant: {e}", "error")
 
-    # Render the edit form
+        return redirect(url_for('view_plant', plant_id=plant_id))
+
     return render_template('edit_plant.html', plant=plant)
+
+
+
+
 
 if __name__ == '__main__':
     # Run on localhost for local testing

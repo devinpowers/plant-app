@@ -5,3 +5,4 @@ pytest==7.4.0
 requests==2.31.0
 azure-cosmos
 werkzeug
+azure-storage-blob

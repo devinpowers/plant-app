@@ -8,6 +8,7 @@ plant_water_reminder.egg-info/top_level.txt
 src/__init__.py
 src/main.py
 tests/__init__.py
+tests/clear_cosmo_db.py
 tests/conftest.py
 tests/test_adding_photo.py
 tests/unit_tests.py
