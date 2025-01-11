@@ -226,4 +226,6 @@ app.get_cosmos_container = get_cosmos_container
 app.blob_service_client = blob_service_client
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    # Use the port specified by Azure, or default to 8000 for local testing
+    port = int(os.getenv("PORT", 8000))
+    app.run(host="0.0.0.0", port=port)

@@ -7,3 +7,4 @@ azure-cosmos
 werkzeug
 azure-storage-blob
 pytest-mock
+python-dotenv
