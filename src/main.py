@@ -225,6 +225,5 @@ def get_plants():
 app.get_cosmos_container = get_cosmos_container
 app.blob_service_client = blob_service_client
 
-if __name__ == '__main__':
-    # Run on localhost for local testing
-    app.run(host='0.0.0.0', port=5001, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000)
