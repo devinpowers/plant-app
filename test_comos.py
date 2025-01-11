@@ -1,15 +1,12 @@
 import os
 from azure.cosmos import CosmosClient, exceptions
+from dotenv import load_dotenv
+load_dotenv()
 
 # Test Configuration
 CONNECTION_STRING = os.getenv("COSMOS_DB_CONNECTION_STRING")
 DATABASE_NAME = "plant_database"  # Replace with your database name
 CONTAINER_NAME = "plant_container"  # Replace with your container name
-
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Get the Cosmos DB connection string
 connection_string = os.getenv("COSMOS_DB_CONNECTION_STRING")

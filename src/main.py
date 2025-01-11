@@ -5,10 +5,10 @@ from datetime import datetime
 from azure.cosmos import CosmosClient
 from werkzeug.utils import secure_filename
 from azure.storage.blob import BlobServiceClient
-# from dotenv import load_dotenv
-#
-# # Load environment variables from .env file
-# load_dotenv()
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 # Initialize Flask app
