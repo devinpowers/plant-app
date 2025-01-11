@@ -107,8 +107,9 @@
     </div>
 
     <p><strong>Scientific Name:</strong> {{ plant['scientific_name'] }}</p>
-    <p><strong>Personal Name:</strong> {{ plant['personal_name'] }}</p>
     <p><strong>Reminder Days:</strong> {{ plant['reminder_days'] }} days</p>
+    <p><strong>Reminder Enabled:</strong> {{ "Yes" if plant['reminder_enabled'] else "No" }}</p>
+    <p><strong>Last Watered Date:</strong> {{ plant['last_watered_date'] }}</p>
 
     <p style="color: black; font-weight: bold; font-size: 1.2rem;">Health Log</p>
 

@@ -5,6 +5,11 @@ from datetime import datetime
 from azure.cosmos import CosmosClient
 from werkzeug.utils import secure_filename
 from azure.storage.blob import BlobServiceClient
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -21,8 +26,7 @@ CONTAINER_NAME = 'plant_container'
 
 
 # Initialize Blob Storage client
-BLOB_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-# BLOB_CONNECTION_STRING = os.getenv("BLOB_CONNECTION_STRING")
+BLOB_CONNECTION_STRING = os.getenv("BLOB_CONNECTION_STRING")
 
 blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
 
@@ -67,6 +71,9 @@ def add_plant():
         scientific_name = request.form.get('scientific_name', '')
         personal_name = request.form.get('personal_name', '')
         reminder_days_str = request.form.get('reminder_days')
+        owner_email = request.form.get('owner_email')
+        last_watered_date = request.form.get('last_watered_date')
+        reminder_enabled = request.form.get('reminder_enabled') == 'on'
 
         try:
             reminder_days = int(reminder_days_str)
@@ -74,35 +81,33 @@ def add_plant():
             flash("Please enter a valid number for reminder days.", "error")
             return redirect(url_for('add_plant'))
 
-        # Generate a unique ID for the plant
         plant_id = str(uuid.uuid4())
         photo = request.files.get('photo')
         photo_url = None
 
         if photo and photo.filename:
             try:
-                # Generate the plant folder path in Blob Storage
                 plant_folder = f"{plant_id}/main.jpg"
-
-                # Upload the main photo as "main.jpg" in the plant's folder
                 blob_client = blob_service_client.get_blob_client(container=container_name, blob=plant_folder)
                 blob_client.upload_blob(photo, overwrite=True)
-
-                # Construct the URL for the main photo
                 photo_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{plant_folder}"
             except Exception as e:
                 flash(f"Failed to upload photo: {e}", "error")
                 return redirect(url_for('add_plant'))
 
-        # Create plant entry for Cosmos DB
+        # Create plant data
         new_plant = {
             'id': plant_id,
             'name': plant_name,
             'scientific_name': scientific_name,
-            'personal_name': personal_name,
             'reminder_days': reminder_days,
-            'photo_filename': photo_url,  # Main photo URL
-            'health_log': []  # Initialize an empty health log
+            'reminder_enabled': reminder_enabled,
+            'last_watered_date': last_watered_date,
+            'owner_email': owner_email,
+            'photo_filename': photo_url,
+            'health_log': [],
+            'created_at': datetime.utcnow().isoformat(),
+            'updated_at': datetime.utcnow().isoformat()
         }
 
         try:
@@ -115,6 +120,7 @@ def add_plant():
 
         return redirect(url_for('index'))
     return render_template('add_plant.html')
+
 
 
 @app.route('/plant/<plant_id>')
@@ -158,8 +164,10 @@ def edit_plant(plant_id):
         # Update plant fields
         plant['name'] = request.form.get('plant_name', plant['name'])
         plant['scientific_name'] = request.form.get('scientific_name', plant['scientific_name'])
-        plant['personal_name'] = request.form.get('personal_name', plant['personal_name'])
         plant['reminder_days'] = int(request.form.get('reminder_days', plant['reminder_days']))
+        plant['owner_email'] = request.form.get('owner_email', plant.get('owner_email', ''))
+        plant['last_watered_date'] = request.form.get('last_watered_date', plant.get('last_watered_date', ''))
+        plant['reminder_enabled'] = request.form.get('reminder_enabled') == 'on'
 
         # Handle new message and photo
         new_message = request.form.get('message', '').strip()
@@ -190,6 +198,9 @@ def edit_plant(plant_id):
                 plant['health_log'] = []
             plant['health_log'].append(health_entry)
 
+        # Update the `updated_at` timestamp
+        plant['updated_at'] = datetime.utcnow().isoformat()
+
         # Update the plant in Cosmos DB
         try:
             container.upsert_item(plant)
@@ -201,9 +212,18 @@ def edit_plant(plant_id):
 
     return render_template('edit_plant.html', plant=plant)
 
+@app.route('/api/plants', methods=['GET'])
+def get_plants():
+    try:
+        container = get_cosmos_container()
+        items = list(container.query_items(query="SELECT * FROM c", enable_cross_partition_query=True))
+        return jsonify(items), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-
-
+# Attach services to app
+app.get_cosmos_container = get_cosmos_container
+app.blob_service_client = blob_service_client
 
 if __name__ == '__main__':
     # Run on localhost for local testing

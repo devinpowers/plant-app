@@ -107,13 +107,23 @@
         </div>
 
         <div class="form-group">
-            <label for="personal_name">Personal Name:</label>
-            <input type="text" name="personal_name" id="personal_name">
+            <label for="reminder_days">Watering Reminder (Days):</label>
+            <input type="number" name="reminder_days" id="reminder_days" required>
         </div>
 
         <div class="form-group">
-            <label for="reminder_days">Watering Reminder (Days):</label>
-            <input type="number" name="reminder_days" id="reminder_days" required>
+            <label for="reminder_enabled">Enable Reminder:</label>
+            <input type="checkbox" name="reminder_enabled" id="reminder_enabled" checked>
+        </div>
+
+        <div class="form-group">
+            <label for="last_watered_date">Last Watered Date:</label>
+            <input type="date" name="last_watered_date" id="last_watered_date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="owner_email">Owner Email:</label>
+            <input type="email" name="owner_email" id="owner_email" required>
         </div>
 
         <div class="form-group">

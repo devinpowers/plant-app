@@ -88,11 +88,17 @@
         <label for="scientific_name">Scientific Name:</label>
         <input type="text" name="scientific_name" id="scientific_name" value="{{ plant['scientific_name'] }}">
 
-        <label for="personal_name">Personal Name:</label>
-        <input type="text" name="personal_name" id="personal_name" value="{{ plant['personal_name'] }}">
-
         <label for="reminder_days">Watering Reminder (Days):</label>
         <input type="number" name="reminder_days" id="reminder_days" value="{{ plant['reminder_days'] }}" required>
+
+        <label for="reminder_enabled">Enable Reminder:</label>
+        <input type="checkbox" name="reminder_enabled" id="reminder_enabled" {% if plant['reminder_enabled'] %}checked{% endif %}>
+
+        <label for="last_watered_date">Last Watered Date:</label>
+        <input type="date" name="last_watered_date" id="last_watered_date" value="{{ plant['last_watered_date'] }}" required>
+
+        <label for="owner_email">Owner Email:</label>
+        <input type="email" name="owner_email" id="owner_email" value="{{ plant['owner_email'] }}" required>
 
         <label for="message">Add a New Note (Optional):</label>
         <textarea name="message" id="message" rows="3" placeholder="Enter a note about this plant..."></textarea>
@@ -106,4 +112,5 @@
 </div>
 </body>
 </html>
+
 

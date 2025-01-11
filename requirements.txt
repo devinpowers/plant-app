@@ -6,3 +6,4 @@ requests==2.31.0
 azure-cosmos
 werkzeug
 azure-storage-blob
+pytest-mock
