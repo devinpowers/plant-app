@@ -27,7 +27,7 @@ This is a simple Flask application with an HTML/JavaScript front end that lets y
 
 1. Run the application:
    ```bash
-   python app.py
+   python src/main..py
    ```
 
 2. Open your browser and navigate to `http://127.0.0.1:5000/`.
