@@ -18,7 +18,6 @@ itsdangerous==2.2.0
 Jinja2==3.1.5
 MarkupSafe==3.0.2
 packaging==24.2
-plant_water_reminder @ file:///Users/devinpowers/IdeaProjects/plant-app
 pluggy==1.5.0
 pycparser==2.22
 pytest==7.4.0
